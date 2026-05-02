@@ -12,7 +12,7 @@ def reset_vi_tri():
 
 def ve_do_thi(g, mau_dinh=None, mau_canh=None, tieu_de=""):
     global _vi_tri
-
+    plt.clf()
     # Nếu không truyền màu thì dùng dict rỗng
     mau_dinh = mau_dinh or {}
     mau_canh = mau_canh or {}
