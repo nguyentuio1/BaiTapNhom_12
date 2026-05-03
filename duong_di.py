@@ -2,6 +2,7 @@
 # Yeu cau 3 (Tim duong di ngan nhat) + Yeu cau 5 (Kiem tra do thi 2 phia)
 
 import heapq
+from collections import deque
 from ve import ve_do_thi
 
 
@@ -76,14 +77,75 @@ def dijkstra(g, nguon, dich):
     return duong, khoang_cach[dich]
 
 
+def kiem_tra_2_phia(g):
+    """Kiem tra do thi co phai la do thi 2 phia hay khong.
+    BFS tu moi thanh phan lien thong, to mau xen ke 2 mau (0, 1).
+    Neu gap 2 dinh ke cung mau -> KHONG la 2 phia.
+    Tra ve True/False.
+    """
+    # Dict luu mau cua moi dinh: 0 hoac 1
+    mau = {}
+
+    # Duyet tat ca dinh (de xu ly do thi co nhieu thanh phan lien thong)
+    for dinh_bat_dau in g.nodes():
+        if dinh_bat_dau in mau:
+            continue
+
+        # BFS tu dinh chua duoc to mau
+        mau[dinh_bat_dau] = 0
+        hang_doi = deque([dinh_bat_dau])
+
+        while hang_doi:
+            u = hang_doi.popleft()
+            for v in g.neighbors(u):
+                if v not in mau:
+                    # To mau nguoc voi mau cua u
+                    mau[v] = 1 - mau[u]
+                    hang_doi.append(v)
+                elif mau[v] == mau[u]:
+                    # Mau thuan: 2 dinh ke cung mau -> KHONG la 2 phia
+                    ve_do_thi(g,
+                              mau_dinh={u: 'red', v: 'red'},
+                              tieu_de=f"Mau thuan tai canh ({u},{v}) - KHONG la 2 phia")
+                    return False
+
+    # Thanh cong: to mau ket qua (skyblue cho nhom 0, orange cho nhom 1)
+    mau_dinh = {}
+    for n in mau:
+        if mau[n] == 0:
+            mau_dinh[n] = 'skyblue'
+        else:
+            mau_dinh[n] = 'orange'
+
+    ve_do_thi(g,
+              mau_dinh=mau_dinh,
+              tieu_de="LA do thi 2 phia (xanh = nhom 1, cam = nhom 2)")
+    return True
+
+
 # ===== TEST =====
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    import networkx as nx
     from do_thi import doc_tu_file
 
+    # Test Dijkstra
     g = doc_tu_file('samples/dothi1.txt')
     plt.figure()
     duong, kc = dijkstra(g, 0, 4)
-    plt.show()
     print("Duong:", duong)
     print("Do dai:", kc)
+
+    # Test 2 phia: chu trinh chan -> True
+    g1 = nx.Graph()
+    g1.add_edges_from([(0, 1), (1, 2), (2, 3), (3, 0)])
+    plt.figure()
+    print("Do thi chu trinh chan:", kiem_tra_2_phia(g1))
+
+    # Test 2 phia: chu trinh le -> False
+    g2 = nx.Graph()
+    g2.add_edges_from([(0, 1), (1, 2), (2, 0)])
+    plt.figure()
+    print("Do thi chu trinh le:", kiem_tra_2_phia(g2))
+
+    plt.show()
