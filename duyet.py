@@ -1,6 +1,7 @@
 from collections import deque
 from ve import ve_do_thi
 
+
 # BFS (duyet theo chieu rong)
 def bfs(g, dinh_bat_dau):
     da_tham = set()        # luu cac dinh da tham
@@ -14,11 +15,13 @@ def bfs(g, dinh_bat_dau):
         dinh = hang_doi.popleft()
         ket_qua.append(dinh)
 
-        # goi ham ve
-        ve_do_thi(da_tham)
+        # to do cac dinh da tham, hien thi dinh dang xet o tieu de
+        ve_do_thi(g,
+                  mau_dinh={d: 'red' for d in da_tham},
+                  tieu_de=f"BFS - dang tham dinh {dinh}")
 
         # duyet cac dinh ke theo thu tu tang dan
-        for ke in sorted(g[dinh]):
+        for ke in sorted(g.neighbors(dinh)):
             if ke not in da_tham:
                 da_tham.add(ke)
                 hang_doi.append(ke)
@@ -35,10 +38,11 @@ def dfs(g, dinh_bat_dau):
         da_tham.add(dinh)
         ket_qua.append(dinh)
 
-        # goi ham ve
-        ve_do_thi(da_tham)
+        ve_do_thi(g,
+                  mau_dinh={d: 'red' for d in da_tham},
+                  tieu_de=f"DFS - dang tham dinh {dinh}")
 
-        for ke in sorted(g[dinh]):
+        for ke in sorted(g.neighbors(dinh)):
             if ke not in da_tham:
                 de_quy(ke)
 
