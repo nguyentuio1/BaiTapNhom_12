@@ -8,6 +8,14 @@ import matplotlib.pyplot as plt
 from do_thi import (
     doc_tu_file, luu_ra_file,
     sang_ma_tran, sang_danh_sach_ke, sang_danh_sach_canh,
+    tu_ma_tran, tu_danh_sach_ke, tu_danh_sach_canh,
+    parse_ma_tran, parse_danh_sach_ke, parse_danh_sach_canh,
+    chuyen_ma_tran_sang_danh_sach_ke,
+    chuyen_ma_tran_sang_danh_sach_canh,
+    chuyen_danh_sach_ke_sang_ma_tran,
+    chuyen_danh_sach_ke_sang_danh_sach_canh,
+    chuyen_danh_sach_canh_sang_ma_tran,
+    chuyen_danh_sach_canh_sang_danh_sach_ke,
 )
 from duyet import bfs, dfs
 from duong_di import dijkstra, kiem_tra_2_phia
@@ -98,6 +106,137 @@ def hien_bieu_dien():
         chuoi_dsc += f"  {canh}\n"
 
     messagebox.showinfo("Bieu dien do thi", chuoi_mt + chuoi_dsk + chuoi_dsc)
+
+
+# ============================================================
+# Dialog nhap bieu dien & chuyen doi (Yeu cau 6 day du)
+# ============================================================
+
+def mo_dialog_chuyen_doi():
+    """Dialog cho phep nhap 1 trong 3 bieu dien va chuyen doi qua lai."""
+    global g
+
+    cua_so = tk.Toplevel(root)
+    cua_so.title("Chuyen doi 3 bieu dien do thi")
+    cua_so.geometry("700x600")
+
+    # Khung tren: chon loai bieu dien dau vao
+    khung_chon = tk.Frame(cua_so)
+    khung_chon.pack(fill=tk.X, padx=10, pady=8)
+
+    tk.Label(khung_chon, text="Bieu dien dau vao:",
+             font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=4)
+
+    bien_loai = tk.StringVar(value="ma_tran")
+    tk.Radiobutton(khung_chon, text="Ma tran ke",
+                   variable=bien_loai, value="ma_tran").pack(side=tk.LEFT, padx=4)
+    tk.Radiobutton(khung_chon, text="Danh sach ke",
+                   variable=bien_loai, value="ds_ke").pack(side=tk.LEFT, padx=4)
+    tk.Radiobutton(khung_chon, text="Danh sach canh",
+                   variable=bien_loai, value="ds_canh").pack(side=tk.LEFT, padx=4)
+
+    bien_co_huong = tk.BooleanVar(value=False)
+    tk.Checkbutton(khung_chon, text="Co huong",
+                   variable=bien_co_huong).pack(side=tk.LEFT, padx=12)
+
+    # Khung giua: input + output
+    khung_giua = tk.Frame(cua_so)
+    khung_giua.pack(fill=tk.BOTH, expand=True, padx=10, pady=4)
+
+    # Input
+    khung_input = tk.LabelFrame(khung_giua, text="Nhap (vi du:\nMa tran: '0 5 0\\n5 0 3\\n0 3 0'\nDS ke: 'A: B(5), C\\nB: A(5)'\nDS canh: 'A -- B 5\\nA -- C 2')")
+    khung_input.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=4)
+    o_nhap = tk.Text(khung_input, height=15, width=35, font=("Consolas", 10))
+    o_nhap.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+
+    # Output
+    khung_output = tk.LabelFrame(khung_giua, text="Ket qua chuyen doi")
+    khung_output.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=4)
+    o_xuat = tk.Text(khung_output, height=15, width=35, font=("Consolas", 10))
+    o_xuat.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+
+    # Khung duoi: nut bam
+    khung_nut = tk.Frame(cua_so)
+    khung_nut.pack(fill=tk.X, padx=10, pady=8)
+
+    def chuyen_doi():
+        """Doc dau vao, chuyen sang ca 3 bieu dien, hien ra o_xuat."""
+        text = o_nhap.get("1.0", tk.END)
+        loai = bien_loai.get()
+        co_huong = bien_co_huong.get()
+
+        try:
+            # Buoc 1: parse dau vao
+            if loai == "ma_tran":
+                labels, ma_tran = parse_ma_tran(text)
+                adj = chuyen_ma_tran_sang_danh_sach_ke(labels, ma_tran, co_huong)
+                canh = chuyen_ma_tran_sang_danh_sach_canh(labels, ma_tran, co_huong)
+            elif loai == "ds_ke":
+                adj = parse_danh_sach_ke(text)
+                labels, ma_tran = chuyen_danh_sach_ke_sang_ma_tran(adj, co_huong)
+                canh = chuyen_danh_sach_ke_sang_danh_sach_canh(adj, co_huong)
+            else:  # ds_canh
+                canh = parse_danh_sach_canh(text)
+                labels, ma_tran = chuyen_danh_sach_canh_sang_ma_tran(canh, co_huong)
+                adj = chuyen_danh_sach_canh_sang_danh_sach_ke(canh, co_huong)
+
+            # Buoc 2: format ket qua hien thi
+            ket_qua = "==== MA TRAN KE ====\n"
+            ket_qua += "Dinh: " + " ".join(str(l) for l in labels) + "\n"
+            for hang in ma_tran:
+                ket_qua += " ".join(str(v) for v in hang) + "\n"
+
+            ket_qua += "\n==== DANH SACH KE ====\n"
+            for u in sorted(adj.keys(), key=lambda x: str(x)):
+                ket_qua += f"{u}: {adj[u]}\n"
+
+            ket_qua += "\n==== DANH SACH CANH ====\n"
+            for c in canh:
+                ket_qua += f"{c}\n"
+
+            o_xuat.delete("1.0", tk.END)
+            o_xuat.insert("1.0", ket_qua)
+        except Exception as e:
+            messagebox.showerror("Loi parse", f"Khong doc duoc dau vao:\n{e}")
+
+    def tao_do_thi_tu_dau_vao():
+        """Tao do thi tu dau vao + thay the do thi hien tai."""
+        global g
+        text = o_nhap.get("1.0", tk.END)
+        loai = bien_loai.get()
+        co_huong = bien_co_huong.get()
+
+        try:
+            if loai == "ma_tran":
+                labels, ma_tran = parse_ma_tran(text)
+                g_moi = tu_ma_tran(labels, ma_tran, co_huong)
+            elif loai == "ds_ke":
+                adj = parse_danh_sach_ke(text)
+                g_moi = tu_danh_sach_ke(adj, co_huong)
+            else:  # ds_canh
+                canh = parse_danh_sach_canh(text)
+                g_moi = tu_danh_sach_canh(canh, co_huong)
+
+            g = g_moi
+            from ve import reset_vi_tri as _rvt
+            _rvt()
+            plt.figure()
+            ve_do_thi(g, tieu_de="Do thi vua tao tu bieu dien")
+            plt.show(block=False)
+            messagebox.showinfo("OK",
+                                f"Da tao do thi co {g.number_of_nodes()} dinh, "
+                                f"{g.number_of_edges()} canh\n"
+                                f"(co huong = {co_huong})")
+            cua_so.destroy()
+        except Exception as e:
+            messagebox.showerror("Loi", str(e))
+
+    tk.Button(khung_nut, text="Chuyen doi (xem 3 bieu dien)",
+              command=chuyen_doi, width=28).pack(side=tk.LEFT, padx=4)
+    tk.Button(khung_nut, text="Tao do thi tu bieu dien nay",
+              command=tao_do_thi_tu_dau_vao, width=28).pack(side=tk.LEFT, padx=4)
+    tk.Button(khung_nut, text="Dong",
+              command=cua_so.destroy, width=10).pack(side=tk.LEFT, padx=4)
 
 
 # ===== Cac ham thuat toan =====
@@ -255,9 +394,10 @@ tk.Label(root, text="UNG DUNG DO THI",
 # Khu vuc file
 khung_file = tk.Frame(root)
 khung_file.pack(pady=4)
-tk.Button(khung_file, text="Mo file", command=mo_file, width=12).pack(side=tk.LEFT, padx=2)
-tk.Button(khung_file, text="Luu file", command=luu_file, width=12).pack(side=tk.LEFT, padx=2)
-tk.Button(khung_file, text="Hien bieu dien", command=hien_bieu_dien, width=14).pack(side=tk.LEFT, padx=2)
+tk.Button(khung_file, text="Mo file", command=mo_file, width=10).pack(side=tk.LEFT, padx=2)
+tk.Button(khung_file, text="Luu file", command=luu_file, width=10).pack(side=tk.LEFT, padx=2)
+tk.Button(khung_file, text="Hien bieu dien", command=hien_bieu_dien, width=12).pack(side=tk.LEFT, padx=2)
+tk.Button(khung_file, text="Chuyen doi 3 BD", command=mo_dialog_chuyen_doi, width=14).pack(side=tk.LEFT, padx=2)
 
 # Khu vuc nhap dinh
 khung_nhap = tk.Frame(root)
