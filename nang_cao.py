@@ -1,6 +1,6 @@
 # nang_cao.py - Binh An (leader) phu trach
 # Yeu cau 7.3 (Ford-Fulkerson) + 7.4 (Fleury) + 7.5 (Hierholzer)
-# PHIEN BAN V2: tu code thuat toan, khong dung ham co san cua NetworkX
+
 
 from collections import deque, defaultdict
 from ve import ve_do_thi
@@ -85,8 +85,7 @@ def ford_fulkerson(g, nguon, dich):
                 bottleneck = con_lai
 
         # Hien thi duong tang vua tim
-        mau_canh = {(duong[i], duong[i + 1]): 'yellow'
-                    for i in range(len(duong) - 1)}
+        mau_canh = {(duong[i], duong[i + 1]): 'yellow' for i in range(len(duong) - 1)}
         ve_do_thi(g,
                   mau_canh=mau_canh,
                   tieu_de=f"Lan {so_lan}: duong tang {' -> '.join(map(str, duong))}, bottleneck = {bottleneck}")
@@ -161,7 +160,7 @@ def _la_cau(graph, u, v):
 # ============================================================
 
 def fleury(g, nguon=None):
-    """Tim duong di Euler bang Fleury (tu code, khong dung NetworkX).
+    """Tim duong di Euler bang Fleury
     Quy tac: tai moi dinh, chon canh khong phai cau.
     Neu chi co canh la cau thi buoc phai chon.
     Tra ve list canh [(u, v), ...] hoac None neu khong co duong Euler.
@@ -258,7 +257,7 @@ def fleury(g, nguon=None):
 # ============================================================
 
 def hierholzer(g, nguon=None):
-    """Tim chu trinh Euler bang Hierholzer (tu code, khong dung NetworkX).
+    """Tim chu trinh Euler bang Hierholzer
     Y tuong: dung stack, khi mot dinh con canh thi day vao,
     khi het canh thi pop ra duong ket qua.
     Tra ve list canh [(u, v), ...] hoac None neu khong co.
